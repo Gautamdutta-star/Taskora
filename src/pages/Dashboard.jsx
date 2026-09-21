@@ -153,7 +153,7 @@ function Dashboard() {
       <aside className="nx-sidebar">
 
         <div className="nx-brand">
-         <div className="...">
+        <div className="nx-brand-mark">
   <img src={taskoraLogo} alt="Taskora" />
 </div>
 
