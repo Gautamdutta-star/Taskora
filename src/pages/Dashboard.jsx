@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import taskoraLogo from "../assets/taskora-logo.png";
 
 import {
   getCurrentUser,
@@ -131,7 +132,9 @@ function Dashboard() {
     return (
       <div className="nx-loading-screen">
         <div className="nx-loading-orbit">
-          <div className="nx-orbit-core">N</div>
+         <div className="nx-orbit-core">
+  <img src={taskoraLogo} alt="Taskora" />
+</div>
         </div>
 
         <h2>Preparing your workspace</h2>
