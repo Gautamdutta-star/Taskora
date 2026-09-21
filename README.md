@@ -111,7 +111,7 @@ AI Generated Tasks:
 ## 🏗️ Project Structure
 
 ```text
-ai-project-task-management-platform/
+taskora
 │
 ├── backend/
 │   ├── auth.py
@@ -161,13 +161,13 @@ ai-project-task-management-platform/
 ## 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Gautamdutta-star/ai-project-task-management-platform.git
+git clone https://github.com/Gautamdutta-star/taskora.git
 ```
 
 Move into the project directory:
 
 ```bash
-cd ai-project-task-management-platform
+cd taskora
 ```
 
 ---
@@ -455,7 +455,7 @@ Possible future enhancements include:
 
 # 👨‍💻 Author
 
-**Gautam Dutta**
+**Gautam Kumar Dutta**
 
 B.Tech Computer Science & Engineering
 
@@ -465,7 +465,7 @@ B.Tech Computer Science & Engineering
 
 GitHub:
 
-https://github.com/Gautamdutta-star/ai-project-task-management-platform
+https://github.com/Gautamdutta-star/taskora
 
 ---
 
