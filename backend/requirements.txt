@@ -6,5 +6,5 @@ psycopg2-binary
 python-dotenv
 pwdlib[argon2]
 python-jose[cryptography]
-google-generativeai
+openai
 python-multipart
