@@ -3015,3 +3015,9 @@ body:has(input[placeholder="Enter your password"]) a:hover {
       repeat(4, minmax(0, 1fr)) !important;
   }
 }
+.nx-orbit-core img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 18px;
+}
