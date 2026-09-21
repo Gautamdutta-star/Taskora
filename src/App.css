@@ -3021,3 +3021,9 @@ body:has(input[placeholder="Enter your password"]) a:hover {
   object-fit: cover;
   border-radius: 18px;
 }
+.nx-brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 18px;
+}
