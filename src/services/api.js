@@ -1,7 +1,13 @@
 import axios from "axios";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === "localhost"
+    ? "http://127.0.0.1:8000"
+    : "https://taskora-w9s0.onrender.com");
+
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000",
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
