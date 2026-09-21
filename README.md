@@ -6,6 +6,8 @@ TASKORA is a full-stack project and task management platform designed to help us
 
 The platform combines a modern React frontend with a FastAPI backend, PostgreSQL database, JWT-based authentication, and AI-powered task generation.
 
+LIVE DEMO LINK :- https://taskora-blond.vercel.app/
+
 ---
 
 ## ✨ Features
