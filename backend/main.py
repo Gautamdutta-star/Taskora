@@ -9,12 +9,14 @@ from openai import OpenAI
 
 from database import Base, engine, get_db
 from models import User, Project, Task
+
 from auth import (
     hash_password,
     verify_password,
     create_access_token,
     get_current_user,
 )
+
 from schemas import (
     RegisterRequest,
     LoginRequest,
@@ -55,11 +57,10 @@ app = FastAPI(
 # =========================================================
 # GEMINI AI CLIENT
 # =========================================================
-#
+
 # We are using Google's Gemini API through the OpenAI-compatible
 # client. The "openai" Python package is only being used as a
 # compatible client library. The actual AI request goes to Gemini.
-#
 
 gemini_client = None
 
@@ -81,6 +82,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # =========================================================
 # AUTHENTICATION ENDPOINTS
@@ -189,7 +191,7 @@ def logout(
     current_user: User = Depends(get_current_user),
 ):
     return {
-        "message": "Logout successful. Remove the token from the client.",
+        "message": "Logout successful. Remove the token from the client."
     }
 
 
@@ -330,7 +332,7 @@ def delete_user(
     db.commit()
 
     return {
-        "message": "User deleted successfully",
+        "message": "User deleted successfully"
     }
 
 
@@ -345,24 +347,17 @@ def delete_user(
 )
 def create_project(
     project: ProjectCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    user = (
-        db.query(User)
-        .filter(User.id == project.user_id)
-        .first()
-    )
-
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found",
-        )
+    # IMPORTANT:
+    # Do not trust user_id sent by frontend.
+    # Always attach project to currently logged-in user.
 
     new_project = Project(
         name=project.name,
         description=project.description,
-        user_id=project.user_id,
+        user_id=current_user.id,
     )
 
     db.add(new_project)
@@ -377,9 +372,16 @@ def create_project(
     response_model=list[ProjectResponse],
 )
 def get_projects(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return db.query(Project).all()
+    # Return only projects belonging to logged-in user.
+
+    return (
+        db.query(Project)
+        .filter(Project.user_id == current_user.id)
+        .all()
+    )
 
 
 @app.get(
@@ -388,11 +390,17 @@ def get_projects(
 )
 def get_project(
     project_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # User can only view their own project.
+
     project = (
         db.query(Project)
-        .filter(Project.id == project_id)
+        .filter(
+            Project.id == project_id,
+            Project.user_id == current_user.id,
+        )
         .first()
     )
 
@@ -412,11 +420,17 @@ def get_project(
 def update_project(
     project_id: int,
     project_data: ProjectCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # Find only the project belonging to current user.
+
     project = (
         db.query(Project)
-        .filter(Project.id == project_id)
+        .filter(
+            Project.id == project_id,
+            Project.user_id == current_user.id,
+        )
         .first()
     )
 
@@ -426,21 +440,8 @@ def update_project(
             detail="Project not found",
         )
 
-    user = (
-        db.query(User)
-        .filter(User.id == project_data.user_id)
-        .first()
-    )
-
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found",
-        )
-
     project.name = project_data.name
     project.description = project_data.description
-    project.user_id = project_data.user_id
 
     db.commit()
     db.refresh(project)
@@ -451,11 +452,17 @@ def update_project(
 @app.delete("/projects/{project_id}")
 def delete_project(
     project_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # User can only delete their own project.
+
     project = (
         db.query(Project)
-        .filter(Project.id == project_id)
+        .filter(
+            Project.id == project_id,
+            Project.user_id == current_user.id,
+        )
         .first()
     )
 
@@ -469,7 +476,7 @@ def delete_project(
     db.commit()
 
     return {
-        "message": "Project deleted successfully",
+        "message": "Project deleted successfully"
     }
 
 
@@ -484,11 +491,18 @@ def delete_project(
 )
 def create_task(
     task: TaskCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # Make sure the selected project belongs
+    # to the currently logged-in user.
+
     project = (
         db.query(Project)
-        .filter(Project.id == task.project_id)
+        .filter(
+            Project.id == task.project_id,
+            Project.user_id == current_user.id,
+        )
         .first()
     )
 
@@ -518,9 +532,18 @@ def create_task(
     response_model=list[TaskResponse],
 )
 def get_tasks(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return db.query(Task).all()
+    # Return only tasks belonging to projects
+    # owned by the currently logged-in user.
+
+    return (
+        db.query(Task)
+        .join(Project, Task.project_id == Project.id)
+        .filter(Project.user_id == current_user.id)
+        .all()
+    )
 
 
 @app.get(
@@ -529,11 +552,18 @@ def get_tasks(
 )
 def get_task(
     task_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # User can only view their own tasks.
+
     task = (
         db.query(Task)
-        .filter(Task.id == task_id)
+        .join(Project, Task.project_id == Project.id)
+        .filter(
+            Task.id == task_id,
+            Project.user_id == current_user.id,
+        )
         .first()
     )
 
@@ -553,11 +583,18 @@ def get_task(
 def update_task(
     task_id: int,
     task_data: TaskCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # Find only task belonging to current user.
+
     task = (
         db.query(Task)
-        .filter(Task.id == task_id)
+        .join(Project, Task.project_id == Project.id)
+        .filter(
+            Task.id == task_id,
+            Project.user_id == current_user.id,
+        )
         .first()
     )
 
@@ -567,9 +604,15 @@ def update_task(
             detail="Task not found",
         )
 
+    # Make sure the new project also belongs
+    # to the current user.
+
     project = (
         db.query(Project)
-        .filter(Project.id == task_data.project_id)
+        .filter(
+            Project.id == task_data.project_id,
+            Project.user_id == current_user.id,
+        )
         .first()
     )
 
@@ -594,11 +637,18 @@ def update_task(
 @app.delete("/tasks/{task_id}")
 def delete_task(
     task_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # User can only delete their own tasks.
+
     task = (
         db.query(Task)
-        .filter(Task.id == task_id)
+        .join(Project, Task.project_id == Project.id)
+        .filter(
+            Task.id == task_id,
+            Project.user_id == current_user.id,
+        )
         .first()
     )
 
@@ -612,7 +662,7 @@ def delete_task(
     db.commit()
 
     return {
-        "message": "Task deleted successfully",
+        "message": "Task deleted successfully"
     }
 
 
